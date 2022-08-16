@@ -1,47 +1,105 @@
 {
-  "name": "node-emberplus",
-  "version": "2.5.12",
-  "description": "Javascript implementation of the Ember+ automation protocol",
-  "main": "index.js",
-  "scripts": {
-    "test": "jest test --coverage",
-    "eslint": "eslint ./",
-    "start": "node server.js"
-  },
-  "author": "Gilles Dufour <dufour.gilles@gmail.com> (www.gdnet.be)",
-  "contributors": [
-    "Gilles Dufour <dufour.gilles@gmail.com> (www.gdnet.be)",
-    "Brian Mayton <bmayton@bdm.cc> (http://bdm.cc)"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/dufourgilles/node-emberplus.git"
-  },
-  "license": "MIT",
-  "dependencies": {
-    "asn1": "github:evs-broadcast/node-asn1",
-    "enum": "^2.4.0",
-    "long": "^3.2.0",
-    "smart-buffer": "^3.0.3",
-    "winston": "^2.1.1",
-    "winston-color": "^1.0.0",
-    "yargs": "^15.1.0"
-  },
-  "devDependencies": {
-    "eslint": "^5.5.0",
-    "jest": "^23.5.0",
-    "jest-cli": "^24.9.0",
-    "sinon": "^7.4.1"
-  },
-  "bugs": {
-    "url": "https://github.com/dufourgilles/node-emberplus/issues"
-  },
-  "homepage": "https://github.com/dufourgilles/node-emberplus#readme",
-  "directories": {
-    "test": "test"
-  },
-  "keywords": [
-    "emberplus",
-    "lawo"
-  ]
+    "name": "node-emberplus",
+    "version": "3.0.0",
+    "description": "Javascript implementation of the Ember+ automation protocol",
+    "main": "lib/index.js",
+    "types": "lib/index.d.ts",
+    "scripts": {
+        "compile": "rimraf lib && tsc -p .",
+        "compile:watch": "tsc -w -p .",
+        "tslint": "tslint --project tslint.json --fix",
+        "tslint:nofix": "tslint --project tslint.json",
+        "test": "jest  --forceExit  --detectOpenHandles",
+        "test:badges": "npm run jest-coverage-badges output ./badges",
+        "test:coverage": "jest --coverage --forceExit --detectOpenHandles && npm run test:badges",
+        "build": "npm run compile && npm run tslint:nofix && npm run test:coverage",
+        "jest-coverage-badges": "jest-coverage-badges"
+    },
+    "author": "Gilles Dufour (dufour.gilles@gmail.com)",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/dufourgilles/node-emberplus.git"
+    },
+    "engines": {
+        "node": ">=10.13.0"
+    },
+    "devDependencies": {
+        "@types/jest": "^24.0.19",
+        "@types/node": "^12.7.12",
+        "ghooks": "2.0.4",
+        "jest": "^24.9.0",
+        "jest-cli": "^24.9.0",
+        "jest-coverage-badges": "1.1.2",
+        "jest-create-mock-instance": "^1.1.0",
+        "jest-jenkins-reporter": "^1.0.2",
+        "jest-junit-reporter": "^1.1.0",
+        "jest-serial-runner": "1.1.0",
+        "rimraf": "3.0.0",
+        "ts-jest": "^24.1.0",
+        "ts-node": "^8.4.1",
+        "tslint": "^5.20.0",
+        "tslint-loader": "^3.5.4",
+        "typescript": "^3.6.4"
+    },
+    "dependencies": {
+        "gdnet-asn1": "1.0.0",
+        "@types/asn1": "^0.2.0",
+        "@types/long": "^4.0.0",
+        "@types/safer-buffer": "2.1.0",
+        "@types/yargs": "15.0.3",
+        "long": "^4.0.0",
+        "reflect-metadata": "0.1.13",
+        "smart-buffer": "^3.0.3",
+        "typedi": "0.8.0",
+        "winston": "^2.1.1",
+        "winston-color": "^1.0.0",
+        "yargs": "15.1.0"
+    },
+    "config": {
+        "ghooks": {
+            "pre-commit": "npm run tslint:nofix"
+        }
+    },
+    "jest": {
+        "verbose": true,
+        "transform": {
+            "^.+\\.tsx?$": "ts-jest"
+        },
+        "testEnvironment": "node",
+        "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.tsx?$",
+        "testPathIgnorePatterns": [
+            "/coverage",
+            "/src/test"
+        ],
+        "testResultsProcessor": "./node_modules/jest-junit-reporter",
+        "moduleFileExtensions": [
+            "ts",
+            "tsx",
+            "js",
+            "jsx",
+            "json",
+            "node"
+        ],
+        "coverageThreshold": {
+            "global": {
+                "branches": 20,
+                "functions": 20,
+                "lines": 20,
+                "statements": -150
+            }
+        },
+        "collectCoverageFrom": [
+            "src/**/*.ts",
+            "!src/fixture/*.ts",
+            "!src/tools/*.ts",
+            "!src/ber.ts"
+        ],
+        "coverageReporters": [
+            "json-summary",
+            "text",
+            "lcov"
+        ],
+        "runner": "jest-serial-runner"
+    }
 }
