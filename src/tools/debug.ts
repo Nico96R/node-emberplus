@@ -47,7 +47,7 @@ const MATRIX_PATH = '0.1.0';
 
 // main();
 
-const options = new EmberClientOptions(LOCALHOST, PORT);
+const options: EmberClientOptions = { host: LOCALHOST, port: PORT};
 options.logger = new LoggingService(LogLevel.debug);
 const client = new EmberClient(options);
 client.connectAsync()

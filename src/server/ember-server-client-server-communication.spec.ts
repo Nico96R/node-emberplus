@@ -15,7 +15,7 @@ import { S101SocketError } from '../error/errors';
 
 const LOCALHOST = '127.0.0.1';
 const PORT = 9009;
-const options = new EmberClientOptions(LOCALHOST, PORT);
+const options: EmberClientOptions = {host: LOCALHOST, port: PORT};
 
 describe('Server - Client communication', () => {
     let server: EmberServer;
@@ -25,9 +25,9 @@ describe('Server - Client communication', () => {
     beforeEach(() => {
         jsonTree = jsonRoot();
         const root = EmberServer.createTreeFromJSON(jsonTree);
-        const serverOptions = new EmberServerOptions(
-            LOCALHOST, PORT, root
-        );
+        const serverOptions: EmberServerOptions = {
+            host: LOCALHOST, port: PORT, tree: root
+        };
         server = new EmberServer(serverOptions);
         mockedServer = server;
         server.on('error', e => {
@@ -250,9 +250,9 @@ describe('Server - Client communication', () => {
 
 describe('closeAsync', () => {
     it('should catch error and reject it properly', async () => {
-        const serverOptions = new EmberServerOptions(
-            LOCALHOST, PORT + 1, new TreeNode()
-        );
+        const serverOptions: EmberServerOptions = {
+            host: LOCALHOST, port: PORT + 1, tree: new TreeNode()
+        };
         const server = new EmberServer(serverOptions);
         const p = server.closeAsync();
         await expect(p).rejects.toThrowError(S101SocketError);

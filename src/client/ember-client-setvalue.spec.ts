@@ -10,7 +10,7 @@ import { EmberTimeoutError, InvalidEmberNodeError } from '../error/errors';
 
 const HOST = '127.0.0.1';
 const PORT = 9012;
-const options = new EmberClientOptions(HOST, PORT);
+const options: EmberClientOptions = {host: HOST, port: PORT};
 
 let socket: S101Client;
 jest.mock('../socket/s101.client', () => {
@@ -31,9 +31,9 @@ describe('setValue', () => {
     beforeEach(() => {
         jsonTree = jsonRoot();
         const root = EmberServer.createTreeFromJSON(jsonTree);
-        const serverOptions = new EmberServerOptions(
-            HOST, PORT, root
-        );
+        const serverOptions: EmberServerOptions = {
+            host: HOST, port: PORT, tree: root
+        };
         server = new EmberServer(serverOptions);
         // server._debug = true;
         server.on('error', e => {

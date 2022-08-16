@@ -8,7 +8,7 @@ import { Parameter } from '../common/Parameter';
 
 const LOCALHOST = '127.0.0.1';
 const PORT = 9009;
-const options = new EmberClientOptions(LOCALHOST, PORT);
+const options: EmberClientOptions = {host: LOCALHOST, port: PORT};
 
 describe('Parameters subscribe/unsubscribe', () => {
     let server: EmberServer;
@@ -17,9 +17,9 @@ describe('Parameters subscribe/unsubscribe', () => {
     beforeEach(() => {
         jsonTree = jsonRoot();
         const root = EmberServer.createTreeFromJSON(jsonTree);
-        const serverOptions = new EmberServerOptions(
-            LOCALHOST, PORT, root
-        );
+        const serverOptions: EmberServerOptions = {
+            host: LOCALHOST, port: PORT, tree: root
+        };
         server = new EmberServer(serverOptions);
         mockedServer = server;
         server.on('error', () => {

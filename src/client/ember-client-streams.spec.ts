@@ -11,7 +11,7 @@ import { S101Client, S101ClientEvent } from '../socket/s101.client';
 
 const HOST = '127.0.0.1';
 const PORT = 9011;
-const options = new EmberClientOptions(HOST, PORT);
+const options: EmberClientOptions = {host: HOST, port: PORT};
 
 let socket: S101Client;
 jest.mock('../socket/s101.client', () => {
@@ -31,9 +31,9 @@ describe('Streams', () => {
     beforeEach(async () => {
         const jsonTree = init();
         const root = EmberServer.createTreeFromJSON(jsonTree);
-        const serverOptions = new EmberServerOptions(
-            HOST, PORT, root
-        );
+        const serverOptions: EmberServerOptions = {
+            host: HOST, port: PORT, tree: root
+        };
         server = new EmberServer(serverOptions);
         // server._debug = true;
         server.on(EmberServerEvent.ERROR, (e: Error) => {
@@ -80,7 +80,8 @@ describe('Streams', () => {
         return client.disconnectAsync();
     });
     it('should ignore stream not subscribed', () => {
-        const o = new EmberClientOptions(HOST, PORT);
+        const o: EmberClientOptions = {host: HOST, port: PORT};
+
         o.logger = new LoggingService();
         const client = new EmberClient(o);
         const mockedClient: {[index: string]: any} = client;

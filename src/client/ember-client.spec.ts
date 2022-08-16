@@ -13,7 +13,7 @@ import { EmberClientEvent } from './ember-client.events';
 
 const HOST = '127.0.0.1';
 const PORT = 9010;
-const options = new EmberClientOptions(HOST, PORT);
+const options: EmberClientOptions = {host: HOST, port: PORT};
 
 describe('EmberClient', () => {
     describe('saveTree', () => {
@@ -43,9 +43,9 @@ describe('EmberClient', () => {
         let server: EmberServer;
         beforeEach(async () => {
             const root: TreeNode = await getRootAsync();
-            const serverOptions = new EmberServerOptions(
-                HOST, PORT, root
-            );
+            const serverOptions: EmberServerOptions = {
+                host: HOST, port: PORT, tree: root
+            };
             server = new EmberServer(serverOptions);
             // server._debug = true;
             server.on(EmberServerEvent.ERROR, (e: Error) => {
@@ -225,9 +225,9 @@ describe('EmberClient', () => {
         let server: EmberServer;
         beforeEach(async () => {
             const root: TreeNode = EmberServer.createTreeFromJSON(jsonRoot());
-            const serverOptions = new EmberServerOptions(
-                HOST, PORT, root
-            );
+            const serverOptions: EmberServerOptions = {
+                host: HOST, port: PORT, tree: root
+            };
             server = new EmberServer(serverOptions);
             // server._debug = true;
             server.on(EmberServerEvent.ERROR, (e: Error) => {

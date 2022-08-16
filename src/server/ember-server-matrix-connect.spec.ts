@@ -19,7 +19,7 @@ import { Socket } from 'net';
 const LOCALHOST = '127.0.0.1';
 const PORT = 9009;
 const MATRIX_PATH = '0.1.0';
-const options = new EmberClientOptions(LOCALHOST, PORT);
+const options: EmberClientOptions = {host: LOCALHOST, port: PORT};
 
 function myWriter(str: string | Uint8Array, encoding?: string, cb?: (err?: Error) => void): boolean;
 function myWriter(buffer: string | Uint8Array, cb?: (err?: Error) => void): boolean;
@@ -36,9 +36,9 @@ describe('Matrix Connect', () => {
     beforeEach(() => {
         jsonTree = jsonRoot();
         const root = EmberServer.createTreeFromJSON(jsonTree);
-        const serverOptions = new EmberServerOptions(
-            LOCALHOST, PORT, root
-        );
+        const serverOptions: EmberServerOptions = {
+            host: LOCALHOST, port: PORT, tree: root
+        };
         server = new EmberServer(serverOptions);
         mockedServer = server;
     });

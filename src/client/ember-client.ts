@@ -32,15 +32,13 @@ import { ParameterContents } from '../common/parameter-contents';
 import { SocketStatsInterface } from '../socket/s101.socket';
 import { createTreeBranch } from '../common/common';
 
-export class EmberClientOptions {
-    static readonly DEFAULT_PORT = 9000;
-    static readonly DEFAULT_TIMEOUT = 3000;
-    public timeoutValue: number;
-    public logger: LoggingService|null;
-    constructor(public host: string, public port: number = EmberClientOptions.DEFAULT_PORT) {
-        this.timeoutValue = EmberClientOptions.DEFAULT_TIMEOUT;
-        this.logger = null;
-    }
+export const DEFAULT_PORT = 9000;
+export const DEFAULT_TIMEOUT = 3000;
+export interface EmberClientOptions {
+    timeoutValue?: number;
+    logger?: LoggingService;
+    host: string;
+    port?: number;
 }
 
 export class EmberClient extends EventEmitter {
@@ -64,9 +62,9 @@ export class EmberClient extends EventEmitter {
     constructor(options: EmberClientOptions) {
         super();
         // copy options info
-        this.timeoutValue = options.timeoutValue;
+        this.timeoutValue = options.timeoutValue || DEFAULT_TIMEOUT;
         this._host = options.host;
-        this._port = options.port;
+        this._port = options.port || DEFAULT_PORT;
         this._logger = options.logger;
 
         // initialise internals data

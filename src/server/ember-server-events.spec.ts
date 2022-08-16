@@ -17,9 +17,9 @@ describe('server', () => {
     describe('Events', () => {
         let mockedServer: {[index: string]: any};
         it('should let possibility to change the LogLevel', () => {
-            const serverOptions = new EmberServerOptions(
-                LOCALHOST, PORT , new TreeNode(), new LoggingService(LogLevel.critical)
-            );
+            const serverOptions: EmberServerOptions = {
+                host: LOCALHOST, port: PORT, tree: new TreeNode(), logger: new LoggingService(LogLevel.critical)
+            };
             const server = new EmberServer(serverOptions);
             mockedServer = server;
             server.setLogLevel(LogLevel.error);
@@ -32,9 +32,9 @@ describe('server', () => {
             const jsonTree = jsonRoot();
             const root = EmberServer.createTreeFromJSON(jsonTree);
             const ERROR_MESSAGE = 'SSome internal error';
-            const serverOptions = new EmberServerOptions(
-                LOCALHOST, PORT, root
-            );
+            const serverOptions: EmberServerOptions = {
+                host: LOCALHOST, port: PORT, tree: root
+            };
             const server = new EmberServer(serverOptions);
             let error: Error;
             server.on(EmberServerEvent.ERROR, e => { error = e; });
@@ -47,9 +47,9 @@ describe('server', () => {
         it('should catch tcp server disconnected message, and clean up clients', async () => {
             const jsonTree = jsonRoot();
             const root = EmberServer.createTreeFromJSON(jsonTree);
-            const serverOptions = new EmberServerOptions(
-                LOCALHOST, PORT, root
-            );
+            const serverOptions: EmberServerOptions = {
+                host: LOCALHOST, port: PORT, tree: root
+            };
             const server = new EmberServer(serverOptions);
             const client = new S101Socket();
             mockedServer = server;
@@ -66,9 +66,9 @@ describe('server', () => {
             const jsonTree = jsonRoot();
             const root = EmberServer.createTreeFromJSON(jsonTree);
             const ERROR_MESSAGE = 'Some internal error';
-            const serverOptions = new EmberServerOptions(
-                LOCALHOST, PORT, root
-            );
+            const serverOptions: EmberServerOptions = {
+                host: LOCALHOST, port: PORT, tree: root
+            };
             const server = new EmberServer(serverOptions);
             const client = new S101Socket();
             jest.spyOn(client, 'remoteAddress', 'get').mockReturnValue('address');

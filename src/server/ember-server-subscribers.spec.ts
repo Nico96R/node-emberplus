@@ -9,7 +9,7 @@ import { Matrix } from '../common/matrix/matrix';
 
 const LOCALHOST = '127.0.0.1';
 const PORT = 9009;
-const options = new EmberClientOptions(LOCALHOST, PORT);
+const options: EmberClientOptions = {host: LOCALHOST, port: PORT};
 
 describe('Subscribers', () => {
     let jsonTree;
@@ -21,9 +21,9 @@ describe('Subscribers', () => {
     beforeEach(() => {
         jsonTree = jsonRoot();
         const root = EmberServer.createTreeFromJSON(jsonTree);
-        const serverOptions = new EmberServerOptions(
-            LOCALHOST, PORT, root, new LoggingService(LogLevel.critical)
-        );
+        const serverOptions: EmberServerOptions = {
+            host: LOCALHOST, port: PORT, tree: root, logger: new LoggingService(LogLevel.critical)
+        };
         server = new EmberServer(serverOptions);
         mockedServer = server;
         server.on('error', () => {

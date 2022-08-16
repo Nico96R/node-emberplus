@@ -1,23 +1,54 @@
 # node-emberplus
 
-This is version 2 of emberplus library.
+![Coverage:branches](./badges/badge-branches.svg)
+![Coverage:functions](./badges/badge-functions.svg)
+![Coverage:lines](./badges/badge-lines.svg)
+![Coverage:statements](./badges/badge-statements.svg)
+
+This is version 3 of Ember+ library.
 An implementation of [Lawo's Ember+](https://github.com/Lawo/ember-plus) control protocol for Node.  
+
 One of Node's great strengths is the ready availability of frameworks for various
-communication protocols and user interfaces; this module allows those to be
-integrated with Ember+ somewhat more easily than the reference libember C++
-implementation.
+communication protocols and user interfaces. This module allows those to be integrated with Ember+ somewhat more easily than the reference libember C++ implementation.
 
-This version support following ember objects : Node, Parameter, Matrix, Function, QualifiedNode,
-QualifiedParameter, QualifiedMatrix, QualifiedFunction.
+This version support following ember objects : `Node`, `Parameter`, `Matrix`, `QualifiedNode`, `QualifiedParameter`, `QualifiedMatrix`, `QualifiedFunction`.
 
-It has been tested with EVS XT4k and Embrionix IP solutions.
+It has been tested with `EVS XT4k` and `Embrionix` IP solutions.
 
-The current version has added new features to the initial commit but it also modified
-the way the lib is used so that now it uses Promise
+The current version has added new features to the initial commit but it also modified the way the lib is used so that now it uses Promise.
 
 Server has been added in version 1.6.0.
 
-This version doesn't have support for StreamCollection, UDP, packet stats/rate or for tree with size higher than 8M.
+## Tools
+
+2 simple tools are provided.  One client and one server.
+
+### serve.ts
+
+```bash
+$ node lib/tools/serve.js
+Options:
+  --version    Show version number                                     [boolean]
+  --host, -h   host name|ip                                 [default: "0.0.0.0"]
+  --port, -p   port                          [number] [required] [default: 9000]
+  --file, -f   file containing the ber (default) or json tree         [required]
+  --json, -j   file format is json                                     [boolean]
+  --debug, -d  debug                                                   [boolean]
+  --help       Show help                                               [boolean]
+
+$ node lib/tools/serve.js --file ./by.json -j --port 9000 -d
+1582212364764 'starting server'
+1582212364776 - INFO - LISTENING Server listening
+1582212366773 - INFO - CONNECTION New connection from 192.168.1.4:54025
+1582212369799 - DEBUG - EMBER_REQUEST New request from 192.168.1.4:54025
+1582212369801 - DEBUG - HANDLE_QUALIFIED_NODE Handling qualified node 0.0
+```
+
+### monitoring-client.js
+
+```bash
+node lib/tools/monitoring-client.js  --host 127.0.0.1 --json /tmp/by.json
+```
 
 ## Example usage
 
@@ -26,70 +57,56 @@ This version doesn't have support for StreamCollection, UDP, packet stats/rate o
 Get Full tree:
 
 ```javascript
-const EmberClient = require('node-emberplus').EmberClient;
-const client = new EmberClient("10.9.8.7", 9000);
-client.on("error", e => {
+const {EmberClient, EmberClientEvent, LoggingService} = require('node-emberplus');
+const client = new EmberClient({host: '192.168.1.2', port: 9000, logger: new LoggingService(5)});
+client.on(EmberClientEvent.ERROR, e => {
    console.log(e);
 });
-client.connect()
-   // Get Root info
-   .then(() => client.getDirectory())
-   // Get a Specific Node
-   .then(() => client.getElementByPath("0.0.2"))
-   .then(node => {
-      console.log(node);
-   })
-   // Get a node by its path identifiers
-   .then(() => client.getElementByPath("path/to/node"))
-   .then(node => {
-      console.log(node);
-   })
-   // Expand entire tree under node 0
-   .then(() => client.expand(client.root.getElementByNumber(0)))
-   .catch((e) => {
-      console.log(e.stack);
-   });
+
+await client.connectAsync();
+// Get Root info
+await client.getDirectoryAsync();
+// Get a Specific Node
+let node: TreeNode = await client.getElementByPathAsync("0.0.2");
+console.log(node);
+// Get a node by its path identifiers
+node = await client.getElementByPathAsync("path/to/node");
+console.log(node);
+// Expand entire tree
+try {
+   await client.expandAsync();
+}catch(e) {
+   console.log(e.stack);
+};
 ```
 
 Subsribe to changes
 
 ```javascript
-const {EmberClient, EmberLib} = require('node-emberplus');
+const {EmberClient, EmberLib, Ember} = require('node-emberplus');
+const options = {host: HOST, port: PORT};
 
-const client = new EmberClient(HOST, PORT);
-client.connect())
-   .then(() => client.getDirectory())
-   .then(() => {console.log(JSON.stringify(client.root.toJSON(), null, 4));})
-   .then(() => client.getElementByPath("scoreMaster/router/labels/group 1"))
-   .then(node => {
-      // For streams, use subscribe
-      return client.subscribe(node, update => {
+
+const client = new EmberClient(options);
+await client.connectAsync();
+await client.getDirectoryAsync();
+console.log(JSON.stringify(client.root.toJSON(), null, 4));
+let node: TreeNode = await client.getElementByPathAsync("scoreMaster/router/labels/group 1");
+await client.subscribeAsync(
+   node, 
+   update => {
          console.log(udpate);
-      });
-   })
-   .then(() => client.getElementByPath("0.2"))
-   .then(node => {
-      // For non-streams a getDirectory will automatically subscribe for update
-      return client.getDirectory(node, update => {
+   });
+node = await client.getElementByPathAsync("0.2");
+await client.getDirectoryAsync(
+   node,
+   update => {
          console.log(udpate);
-      });
-   })
-   // You can also provide a callback to the getElementByPath
-   // Be carefull that subscription will be done for all elements in the path
-   .then(() => client.getElementByPath("0.3", update => {console.log(update);}))
-   ;
-```
+   });
 
-### Setting new value
-
-```javascript
-client = new EmberClient(LOCALHOST, PORT);
-await client.connect()
-await client.getDirectory();
-await client.getElementByPath("0.0.1");
-await client.setValue(client.root.getElementByPath("0.0.1"), "gdnet");
-console.log("result", server.tree.getElementByPath("0.0.1").contents.value)
-return client.disconnect().then(() => { console.log("disconnected")});
+// You can also provide a callback to the getElementByPath
+// Be carefull that subscription will be done for all elements in the path
+await client.getElementByPathAsync("0.3", update => {console.log(update);});
 ```
 
 ### Invoking Function
@@ -97,19 +114,19 @@ return client.disconnect().then(() => { console.log("disconnected")});
 ```javascript
 const {EmberClient, EmberLib} = require('node-emberplus');
 
-const client = new EmberClient(HOST, PORT);
-client.connect())
-   .then(() => client.getDirectory())
-   .then(() => {console.log(JSON.stringify(client.root.toJSON(), null, 4));})
-   .then(() => client.expand(client.root.getElementByNumber(0)))
-   .then(() => {
-      console.log(JSON.stringify(client.root.getElementByNumber(0).toJSON(), null, 4));
-      const funcNode = client.root.getElementByNumber(0).getElementByNumber(5).getElementByNumber(0);
-      return client.invokeFunction(funcNode, [
-         new ember.FunctionArgument(EmberLib.ParameterType.integer, 1),
-         new ember.FunctionArgument(EmberLib.ParameterType.integer, 7)
-      ]);
-   });
+const client = new EmberClient(options);
+await client.connectAsync();
+await client.getDirectoryAsync();
+console.log(JSON.stringify(client.root.toJSON(), null, 4));
+await client.expandAsync(client.root.getElementByNumber(0));
+console.log(JSON.stringify(client.root.getElementByNumber(0).toJSON(), null, 4));
+const funcNode = client.root.getElementByNumber(0).getElementByNumber(5).getElementByNumber(0);
+await client.invokeFunctionAsync(
+   funcNode,
+   [
+      new ember.FunctionArgument(EmberLib.ParameterType.integer, 1),
+      new ember.FunctionArgument(EmberLib.ParameterType.integer, 7)
+   ]);
 ```
 
 ### Matrix Connection
@@ -118,18 +135,16 @@ client.connect())
 const {EmberClient, EmberLib} = require('node-emberplus');
 
 
-const client = new EmberClient(HOST, PORT);
-client.connect()
-   .then(() => client.getDirectory())
-   .then(() => client.getElementByPath("0.1.0"))
-   .then(matrix => {
-      console.log("Connecting source 1 to target 0);
-      return client.matrixConnect(matrix, 0, [1]);
-   })
-   .then(() => client.matrixDisconnect(matrix, 0, [1]))
-   .then(() => client.matrixSetConnection(matrix, 0, [0,1]))
-   .then(matrix => client.getElementByPath(matrix.getPath()))
-   .then(() => client.disconnect());
+const client = new EmberClient(options);
+await client.connectAsync();
+await client.getDirectoryAsync();
+let matrix: Matrix = await client.getElementByPathAsync("0.1.0");
+console.log("Connecting source 1 to target 0");
+await client.matrixConnectAsync(matrix, 0, [1]);
+await client.matrixDisconnectAsync(matrix, 0, [1]))
+matrix = await client.matrixSetConnectionAsync(matrix, 0, [0,1]))
+await client.getElementByPathAsync(matrix.getPath()))
+await client.disconnectAsync();
 
 ```
 
@@ -137,7 +152,7 @@ client.connect()
 
 ```javascript
 // Simple packet decoder
-const Decoder = require('node-emberplus').Decoder;
+const Decoder = require('node-emberplus');.Decoder;
 const fs = require("fs");
 
 fs.readFile("tree.ember", (e,data) => {
@@ -149,24 +164,24 @@ fs.readFile("tree.ember", (e,data) => {
 
 ```javascript
 // Server
-const EmberServer = require("node-emberplus").EmberServer;
-const server = new EmberServer("127.0.0.1", 9000, root);
-server.on("error", e => {
+const EmberServer = require('node-emberplus');.EmberServer;
+const server = new EmberServer({host: "127.0.0.1", port: 9000, tree: root});
+server.on(EmberServerEvent.ERROR, e => {
    console.log("Server Error", e);
 });
-server.on("clientError", info => {
+server.on(EmberServerEvent.CLIENT_ERROR, info => {
    console.log("clientError", info);
 });
-server.on("matrix-disconnect", info => {
+server.on(EmberServerEvent.MATRIX_DISCONNECT, info => {
    console.log(`Client ${info.client} disconnected ${info.target} and ${info.sources}`);
 }
-server.on("matrix-connect", info => {
+server.on(EmberServerEvent.MATRIX_CONNECT, info => {
    console.log(`Client ${info.client} connected ${info.target} and ${info.sources}`);
 }
-server.on("matrix-change", info => {
+server.on(EmberServerEvent.MATRIX_CHANGE, info => {
    console.log(`Client ${info.client} changed ${info.target} and ${info.sources}`);
 }
-server.on("event", txt => {
+server.on(EmberServerEvent.EVENT, txt => {
    console.log("event: " + txt);
 })
 server.listen().then(() => { console.log("listening"); }).catch((e) => { console.log(e.stack); });
@@ -175,8 +190,8 @@ server.listen().then(() => { console.log("listening"); }).catch((e) => { console
 ### Construct Tree
 
 ```javascript
-const EmberServer = require("node-emberplus").EmberServer;
-const {ParameterType, FunctionArgument} = require("node-emberplus").EmberLib;
+const EmberServer = require("emberlibrary").EmberServer;
+const {ParameterType, FunctionArgument} = require('node-emberplus');.EmberLib;
 
 const targets = [ "tgt1", "tgt2", "tgt3" ];
 const sources = [ "src1", "src2", "src3" ];
@@ -208,16 +223,16 @@ const buildConnections = function(s, t) {
 const jsonTree = [
    {
       // path "0"
-      identifier: "GDNet Tree",
+      identifier: "Sample Tree",
       children: [
             {
                // path "0.0"
                identifier: "identity",
                children: [
-                  {identifier: "product", value: "gdnet core"},
-                  {identifier: "company", value: "GDNet", access: "readWrite"},
+                  {identifier: "product", value: "Sample core"},
+                  {identifier: "company", value: "Sample", access: "readWrite"},
                   {identifier: "version", value: "1.2.0"},
-                  {identifier: "author", value: "dufour.gilles@gmail.com"},
+                  {identifier: "author", value: "first.last@gmail.com"},
                ]
             },
             {
@@ -293,9 +308,27 @@ const jsonTree = [
                         name: "changeCount"
                   }
                ]
+            },
+            {
+               identifier: 'audio-streams',
+               children: [
+                  { identifier: 'audio1', value: 123, type: 'integer', streamIdentifier: 45, streamDescriptor: {format: "signedInt16BigEndian", offset: 4} },
+                  { identifier: 'audio2', value: 456, type: 'integer', access: 'readWrite', streamIdentifier: 654321 },
+                  { identifier: 'audio3', value: 789, type: 'integer', access: 'readWrite', streamIdentifier: 1234567 },
+                  { identifier: 'audio4', value: 321, type: 'integer', streamIdentifier: 34 }
+               ]
+            ,
+            {
+               identifier: "template1",
+               description: "Parameter template example",
+               template: {
+                  value: 0,
+                  minimum: -1,
+                  maximum: 10
+               }
             }
       ]
    }
 ];
-const root = EmberServer.JSONtoTree(jsonTree);
+const root = EmberServer.createTreeFromJSON(jsonTree);
 ```

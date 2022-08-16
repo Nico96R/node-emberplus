@@ -151,7 +151,7 @@ const saveJSON = async (root: TreeNode) => {
 };
 
 const main = async () => {
-    const options = new EmberClientOptions(argv.host, argv.port);
+    const options: EmberClientOptions = {host: argv.host, port: argv.port};
     if (argv.loglevel) {
         options.logger = new LoggingService(argv.loglevel);
     }

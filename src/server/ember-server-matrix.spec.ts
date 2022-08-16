@@ -15,9 +15,9 @@ describe('Matrix', () => {
     beforeEach(() => {
         jsonTree = jsonRoot();
         const root = EmberServer.createTreeFromJSON(jsonTree);
-        const serverOptions = new EmberServerOptions(
-            LOCALHOST, PORT, root
-        );
+        const serverOptions: EmberServerOptions = {
+            host: LOCALHOST, port: PORT, tree: root
+        };
         server = new EmberServer(serverOptions);
         server.on('error', () => {
             // ignore

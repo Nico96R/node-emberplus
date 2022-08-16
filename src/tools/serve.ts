@@ -114,11 +114,11 @@ const main = async () => {
         tree = argv.json ? EmberServer.createTreeFromJSON(JSON.parse(data.toString())) :
             data ? decodeBuffer(data) as TreeNode : EmberServer.createTreeFromJSON(init());
     }
-    const options = new EmberServerOptions(
-        argv.host,
-        argv.port,
-        tree
-    );
+    const options: EmberServerOptions = {
+        host: argv.host,
+        port: argv.port,
+        tree: tree
+    };
     if (argv.debug) {
         options.logger = new LoggingService(LogLevel.debug);
     }

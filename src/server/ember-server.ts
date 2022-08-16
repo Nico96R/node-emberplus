@@ -20,14 +20,13 @@ import { Command } from '../common/command';
 import { QualifiedParameter } from '../common/qualified-parameter';
 import { ParameterAccess } from '../common/parameter-access';
 
-export class EmberServerOptions {
-    static readonly DEFAULT_PORT = 9000;
-    constructor(
-        public host: string,
-        public port: number = EmberServerOptions.DEFAULT_PORT,
-        public tree: TreeNode,
-        public logger?: LoggingService) {
-    }
+const DEFAULT_PORT = 9000;
+
+export interface EmberServerOptions {
+        host: string;
+        port?: number;
+        tree: TreeNode;
+        logger?: LoggingService;
 }
 
 export interface ClientInfo {
@@ -90,7 +89,7 @@ export class EmberServer extends EventEmitter {
     constructor(public options: EmberServerOptions) {
         super();
         this._host = options.host;
-        this._port = options.port;
+        this._port = options.port || DEFAULT_PORT;
         this._tree = options.tree;
         this._logger = options.logger;
         this.server = new S101Server(this._host, this._port);
