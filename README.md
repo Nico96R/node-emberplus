@@ -98,14 +98,15 @@ await client.subscribeAsync(
          console.log(udpate);
    });
 node = await client.getElementByPathAsync("0.2");
+
+// You can also provide a callback to the getElementByPath or getDirectoryAsync
+// Be carefull that subscription will be done for all elements in the path
 await client.getDirectoryAsync(
    node,
    update => {
          console.log(udpate);
    });
 
-// You can also provide a callback to the getElementByPath
-// Be carefull that subscription will be done for all elements in the path
 await client.getElementByPathAsync("0.3", update => {console.log(update);});
 ```
 

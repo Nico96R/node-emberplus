@@ -1,5 +1,6 @@
 import { ExtendedReader, APPLICATION, CONTEXT } from '../ber';
 import { TreeNode } from './tree-node';
+import { Element } from './element';
 import { Command } from './command';
 import { InvocationResult } from './invocation-result';
 import { StreamCollection } from './stream/stream-collection';
@@ -279,6 +280,7 @@ export const decodeBuffer = (packet: Buffer) => {
 export const EmberLib = {
     decodeBuffer,
     TreeNode,
+    Element,
     Node,
     Parameter,
     ParameterType,

@@ -1,8 +1,5 @@
 import { ExtendedWriter as Writer, CONTEXT } from '../ber';
 import { TreeNode } from './tree-node';
-import { JParameter } from './parameter';
-import { JNode } from './node';
-import { JFunction } from './function/function';
 
 export class Element extends TreeNode {
     constructor(number: number) {
