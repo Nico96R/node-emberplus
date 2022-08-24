@@ -1,19 +1,20 @@
-import yargs = require('yargs');
+const yargs = require('yargs/yargs');
 import { readFileSync } from 'fs';
 import {decodeBuffer, nodeLogger} from '../common/common';
 import { TreeNode } from '../common/tree-node';
 
-interface Arguments {
-    file: string;
-}
-
-const argv: Arguments = yargs.options({
-    file: {
-        alias: 'f',
-        description: 'file containing the ber tree',
-        demandOption: true
-    }
-}).help().argv as Arguments;
+const argv: {
+    [x: string]: unknown;
+    f: string;
+    file?: string;
+    _: string[];
+    $0: string;
+} = yargs(process.argv)
+    .alias('f', 'file')
+    .describe('f', 'file containing the ber tree')
+    .demandOption('f')
+    .string('f')
+    .argv;
 
 const main = async () => {
     const berData = readFileSync(argv.file);

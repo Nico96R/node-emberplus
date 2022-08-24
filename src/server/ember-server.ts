@@ -158,9 +158,10 @@ export class EmberServer extends EventEmitter {
         server._handlers.handleMatrixConnections(new ClientRequest(null, null), matrix, [connection], false);
     }
 
-    static createTreeFromJSON(obj: object): TreeNode {
+    static createTreeFromJSON(obj: object, logger?: LoggingService): TreeNode {
         const tree = new TreeNode();
-        JSONParser.parseObj(tree, obj);
+        const jsonParser = JSONParser.getJSONParser(logger);
+        jsonParser.parseObj(tree, obj);
         return tree;
     }
 

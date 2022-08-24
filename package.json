@@ -1,6 +1,6 @@
 {
     "name": "node-emberplus",
-    "version": "3.0.2",
+    "version": "3.0.3",
     "description": "Javascript implementation of the Ember+ automation protocol",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
@@ -43,18 +43,17 @@
         "typescript": "^3.6.4"
     },
     "dependencies": {
-        "gdnet-asn1": "1.0.0",
         "@types/asn1": "^0.2.0",
         "@types/long": "^4.0.0",
         "@types/safer-buffer": "2.1.0",
-        "@types/yargs": "15.0.3",
+        "gdnet-asn1": "1.0.0",
         "long": "^4.0.0",
         "reflect-metadata": "0.1.13",
         "smart-buffer": "^3.0.3",
         "typedi": "0.8.0",
         "winston": "^2.1.1",
         "winston-color": "^1.0.0",
-        "yargs": "15.1.0"
+        "yargs": "^17.5.1"
     },
     "config": {
         "ghooks": {

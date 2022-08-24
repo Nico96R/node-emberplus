@@ -1,5 +1,5 @@
-import yargs = require('yargs');
-import { readFileSync, fstat, readdirSync } from 'fs';
+const yargs = require('yargs/yargs');
+import { readFileSync, readdirSync } from 'fs';
 import {EmberServer, EmberServerOptions, EmberServerEvent} from '../server/ember-server';
 import {decodeBuffer} from '../common/common';
 import { TreeNode } from '../common/tree-node';
@@ -16,43 +16,40 @@ interface Arguments {
     debug: boolean;
 }
 
-const argv: Arguments = yargs.options({
-    host: {
-        alias: 'h',
-        description: 'host name|ip',
-        default: '0.0.0.0'
-    },
-
-    port: {
-        alias: 'p',
-        default: 9000,
-        type: 'number',
-        description: 'port',
-        demandOption: true
-    },
-
-    file: {
-        alias: 'f',
-        description: 'file containing the ber (default) or json tree'
-    },
-
-    json: {
-        alias: 'j',
-        type: 'boolean',
-        description: 'file format is json'
-    },
-    multi: {
-        alias: 'm',
-        type: 'boolean',
-        description: 'indicate to load multiple json files'
-    },
-    debug: {
-        alias: 'd',
-        type: 'boolean',
-        description: 'debug'
-    }
-
-}).help().argv as Arguments;
+const argv: {
+    [x: string]: unknown;
+    p: number;
+    h: string;
+    path?: string;
+    host?: string;
+    file?: string;
+    json?: boolean;
+    port?: number;
+    multi?: boolean;
+    debug?: boolean;
+    _: string[];
+    $0: string;
+} = yargs(process.argv)
+    .usage('Usage: $0 [options]')
+    .alias('h', 'host')
+    .default('h', '127.0.0.1')
+    .describe('h', 'host name|ip')
+    .alias('p', 'port')
+    .describe('p', 'port - default 9000')
+    .default('p', 9000)
+    .alias('f', 'file')
+    .describe('f', 'filename to save ember tree')
+    .alias('j', 'json')
+    .describe('j', 'filename to save json tree')
+    .alias('d', 'debug')
+    .describe('d', 'debug')
+    .demandOption(['h'])
+    .alias('m', 'multi')
+    .describe('path', 'path')
+    .describe('m', 'indicate to load multiple json files')
+    .string(['h', 'f', 'path'])
+    .boolean(['d', 'm', 'j'])
+    .argv;
 
 const listJSONFiles = (): RegExpMatchArray[] => {
     const res: RegExpMatchArray[] = [];
@@ -106,22 +103,26 @@ const multiLoad = async (): Promise<TreeNode> => {
 };
 
 const main = async () => {
-    let tree: TreeNode;
-    if (argv.multi) {
-        tree = await multiLoad();
-    } else {
-        const data = argv.file ? readFileSync(argv.file) : undefined;
-        tree = argv.json ? EmberServer.createTreeFromJSON(JSON.parse(data.toString())) :
-            data ? decodeBuffer(data) as TreeNode : EmberServer.createTreeFromJSON(init());
-    }
     const options: EmberServerOptions = {
         host: argv.host,
         port: argv.port,
-        tree: tree
+        tree: new TreeNode()
     };
     if (argv.debug) {
         options.logger = new LoggingService(LogLevel.debug);
     }
+    if (argv.multi) {
+        options.tree = await multiLoad();
+    } else if (argv.file) {
+        console.log('Converting tree from file', argv.file);
+        const data = readFileSync(argv.file);
+        options.tree = argv.json ? EmberServer.createTreeFromJSON(JSON.parse(data.toString()), options.logger) :
+            decodeBuffer(data) as TreeNode;
+    } else {
+        console.log('Load default tree');
+        options.tree = EmberServer.createTreeFromJSON(init(), options.logger);
+    }
+
     const server = new EmberServer(options);
     server.on(EmberServerEvent.CONNECTION, (info: string) => {
         console.log(Date.now(), `Connection from ${info}`);

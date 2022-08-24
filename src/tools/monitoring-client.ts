@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import yargs = require('yargs');
+const yargs = require('yargs/yargs');
 import { writeFile, createWriteStream } from 'fs';
 import { TreeNode } from '../common/tree-node';
 import { ErrorMultipleError } from '../error/errors';
@@ -9,62 +9,77 @@ import { jsonNodeLogger, jsonTreeLogger, jsonFullNodeLogger} from '../common/com
 import { LogLevel, LoggingService } from '../logging/logging.service';
 import { EmberClientEvent } from '../client/ember-client.events';
 
-const wait = (timesecond: number): Promise<void> => {
-    return new Promise(resolve => {
-        setTimeout(() => {resolve(); }, timesecond * 1000);
-    });
-};
-
-interface Arguments {
-    host: string;
-    port: number;
-    file: string;
-    json: string;
-    path: string;
-    loglevel: number;
-    split: number;
-    stats: boolean;
-}
-
-const argv: Arguments = yargs.options({
-    loglevel: {
-        alias: 'l',
-        type: 'number',
-        description: 'enable log level',
-        min: LogLevel.critical,
-        max: LogLevel.debug
-    },
-    host: {
-        alias: 'h',
-        description: 'host name|ip',
-        demandOption: true
-    },
-    path: {
-        description: 'path to monitor'
-    },
-    port: {
-        alias: 'p',
-        default: 9000,
-        description: 'port'
-    },
-    file: {
-        alias: 'f',
-        description: 'file name to save discovered tree'
-    },
-    json: {
-        alias: 'j',
-        description: 'file name to save json tree'
-    },
-    split: {
-        type: 'number',
-        description: 'split into multiple files'
-    },
-    stats: {
-        alias: 's',
-        type: 'boolean',
-        description: 'display stats'
-    }
-}).help().argv as Arguments;
+const argv: {
+    [x: string]: unknown;
+    p: number;
+    h: string;
+    path?: string;
+    host?: string;
+    file?: string;
+    json?: string;
+    port?: number;
+    stats?: boolean;
+    split?: number;
+    loglevel?: LogLevel;
+    s: boolean;
+    _: string[];
+    $0: string;
+} = yargs(process.argv)
+    .usage('Usage: $0 [options]')
+    .alias('h', 'host')
+    .default('h', '127.0.0.1')
+    .describe('h', 'host name|ip')
+    .alias('p', 'port')
+    .describe('p', 'port - default 9000')
+    .default('p', 9000)
+    .alias('f', 'file')
+    .describe('f', 'filename to save ember tree')
+    .alias('j', 'json')
+    .describe('j', 'filename to save json tree')
+    .alias('s', 'stats')
+    .alias('l', 'loglevel')
+    .demandOption(['h'])
+    .boolean(['s'])
+    .argv;
+//     loglevel: {
+//         alias: 'l',
+//         type: 'number',
+//         description: 'enable log level',
+//         min: LogLevel.critical,
+//         max: LogLevel.debug
+//     },
+//     host: {
+//         alias: 'h',
+//         description: 'host name|ip',
+//         demandOption: true
+//     },
+//     path: {
+//         description: 'path to monitor',
+//         type: 'string'
+//     },
+//     port: {
+//         alias: 'p',
+//         default: 9000,
+//         description: 'port'
+//     },
+//     file: {
+//         alias: 'f',
+//         description: 'file name to save discovered tree'
+//     },
+//     json: {
+//         alias: 'j',
+//         description: 'file name to save json tree'
+//     },
+//     split: {
+//         type: 'number',
+//         description: 'split into multiple files'
+//     },
+//     stats: {
+//         alias: 's',
+//         type: 'boolean',
+//         description: 'display stats'
+//     }
+// }).help().argv as Arguments;
 
 const logEvent = (node: TreeNode) => {
     console.log('New Update', node);

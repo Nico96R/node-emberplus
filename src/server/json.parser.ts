@@ -1,27 +1,39 @@
-import { MatrixContents } from '../common/matrix/matrix-contents';
 import { TreeNode } from '../common/tree-node';
 import { Parameter } from '../common/parameter';
-import { parameterTypeFromString } from '../common/parameter-type';
+import { ParameterType, parameterTypeFromString } from '../common/parameter-type';
 import { parameterAccessFromString, ParameterAccess } from '../common/parameter-access';
 import { FunctionArgument } from '../common/function/function-argument';
 import { MatrixNode } from '../common/matrix/matrix-node';
 import { MatrixConnection } from '../common/matrix/matrix-connection';
 import { Node } from '../common/node';
-import { NodeContents } from '../common/node-contents';
 import { Label } from '../common/label';
 import { MatrixType } from '../common/matrix/matrix-type';
 import { InvalidEmberNodeError } from '../error/errors';
 import { MatrixMode } from '../common/matrix/matrix-mode';
-import { FunctionContents } from '../common/function/function-contents';
-import { Function } from '../common/function/function';
+import { Function, FunctionCallBack } from '../common/function/function';
 import { Template } from '../common/template';
 import { StreamDescription } from '../common/stream/stream-description';
 import { streamFormatFromString } from '../common/stream/stream-format';
 import { StringIntegerCollection } from '../common/string-integer-collection';
 import { StringIntegerPair } from '../common/string-integer-pair';
+import { LoggingService } from '../logging/logging.service';
 
-export abstract class JSONParser {
+const basicFunctions: Record<string, FunctionCallBack> = {
+    'sum': (args: FunctionArgument[]) => {
+        let sum = 0;
+        args.forEach(a => sum += Number(a.value));
+        return [
+            new FunctionArgument(ParameterType.integer, sum)
+        ];
+    }
+};
 
+export class JSONParser {
+    static logger: LoggingService | null = null;
+    static getJSONParser(_logger?: LoggingService): typeof JSONParser {
+        this.logger = _logger;
+        return this;
+    }
     static parseMatrixContent(number: number, content: { [index: string]: any }): MatrixNode {
         let type = MatrixType.oneToN;
         let mode = MatrixMode.linear;
@@ -126,7 +138,17 @@ export abstract class JSONParser {
                 parent.addChild(emberElement);
                 continue;
             } else if (content.func != null) {
-                emberElement = new Function(number, content.func, content.identifier);
+                if (typeof(content.func) === 'string') {
+                    if (basicFunctions[content.func] == null) {
+                        throw new Error(`Unknown function ${content.func}`);
+                    }
+                    this.logger?.debug(`Using default function ${content.func}`, basicFunctions[content.func]);
+                    emberElement = new Function(number, basicFunctions[content.func], content.identifier);
+                } else if (typeof(content.func) === 'function') {
+                    emberElement = new Function(number, content.func, content.identifier);
+                } else {
+                    throw new Error(`Invalid functiom type ${typeof(content.func)}`);
+                }
                 if (content.arguments != null) {
                     for (const argument of content.arguments) {
                         emberElement.contents.arguments.push(new FunctionArgument(
