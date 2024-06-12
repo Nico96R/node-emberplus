@@ -31,6 +31,7 @@ import { ClientLogs } from './ember-client-logs';
 import { ParameterContents } from '../common/parameter-contents';
 import { SocketStatsInterface } from '../socket/s101.socket';
 import { createTreeBranch } from '../common/common';
+import { ParameterType } from '../common/parameter-type';
 
 export const DEFAULT_PORT = 9000;
 export const DEFAULT_TIMEOUT = 3000;
@@ -426,14 +427,14 @@ export class EmberClient extends EventEmitter {
         this.logger?.setLogLevel(logLevel);
     }
 
-    async setValueAsync(node: Parameter|QualifiedParameter, value: string | number | boolean | Buffer): Promise<void> {
+    async setValueAsync(node: Parameter|QualifiedParameter, value: string | number | boolean | Buffer, type?: ParameterType): Promise<void> {
         if (!node.isParameter()) {
             throw new InvalidEmberNodeError(node.getPath(), 'not a Parameter');
         } else {
             return this.makeRequestAsync(
                 () => {
                     this.logger?.log(ClientLogs.SETVALUE_REQUEST(node, value));
-                    this.socket.sendBERNode(node.setValue(ParameterContents.createParameterContent(value)));
+                    this.socket.sendBERNode(node.setValue(ParameterContents.createParameterContent(value, type)));
                 },
                 (err: Error, n: any) => {
                     if (err) {

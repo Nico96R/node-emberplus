@@ -212,7 +212,7 @@ export class Parameter extends Element {
     setValue(value: ParameterContents| number | string | boolean | Buffer): TreeNode {
         return this.getTreeBranch(undefined, (m: TreeNode) => {
             (m as Parameter).setContents(
-                (value instanceof ParameterContents) ? value : ParameterContents.createParameterContent(value));
+                (value instanceof ParameterContents) ? value : ParameterContents.createParameterContent(value, this.type));
         });
     }
 

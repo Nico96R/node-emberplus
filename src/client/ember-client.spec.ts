@@ -1,8 +1,6 @@
-import { LoggingService, LogLevel } from '../logging/logging.service';
 import { EmberClient, EmberClientOptions } from './ember-client';
 import { EmberServer, EmberServerEvent, ClientErrorEventData, EmberServerOptions } from '../server/ember-server';
 import { TreeNode } from '../common/tree-node';
-import Errors = require('../error/errors');
 import { getRootAsync } from '../fixture/utils';
 import { init as jsonRoot} from '../fixture/utils';
 import { QualifiedNode } from '../common/qualified-node';
@@ -10,6 +8,7 @@ import { Node } from '../common/node';
 import { Parameter } from '../common/parameter';
 import { ParameterType } from '../common/parameter-type';
 import { EmberClientEvent } from './ember-client.events';
+import { S101SocketError } from '../error/errors';
 
 const HOST = '127.0.0.1';
 const PORT = 9010;
@@ -73,14 +72,7 @@ describe('EmberClient', () => {
             client.on('error', () => {
                 // ignore
             });
-            let error: Error;
-            try {
-                await client.connectAsync();
-            } catch (e) {
-                error = e;
-            }
-            expect(error).toBeDefined();
-            expect(error).toBe(internalError);
+            await expect(client.connectAsync()).rejects.toThrow(internalError);
         });
         it('should return connection status with isConnected', async () => {
             const client = new EmberClient(options);
@@ -101,7 +93,7 @@ describe('EmberClient', () => {
             await client.connectAsync();
             expect(client.isConnected()).toBeTruthy();
             const p = client.connectAsync();
-            await expect(p).rejects.toThrowError(Errors.S101SocketError);
+            await expect(p).rejects.toThrowError(S101SocketError);
             return client.disconnectAsync();
         });
         it('should simply return if calling disconnect and not connected', async () => {
@@ -109,12 +101,8 @@ describe('EmberClient', () => {
             client.on('error', () => {
                 // ignore
             });
-            let error: Error;
             expect(client.isConnected()).toBeFalsy();
-            try {
-                client.disconnectAsync();
-            } catch (e) { error = e; }
-            expect(error).not.toBeDefined();
+            await expect(client.disconnectAsync()).resolves.not.toThrow();
         });
         it('should be able to fetch a specific node', async () => {
             const client = new EmberClient(options);
@@ -158,7 +146,7 @@ describe('EmberClient', () => {
             mockedClient.handleQualifiedNode(client.root, qn);
             expect(client.root.getElementByPath('0.1')).toBe(null);
         });
-        it('should notify if parameter does change when receiving message', () => {
+        it('should notify if parameter does change when receiving message', async () => {
             const client = new EmberClient(options);
             const mockedClient: {[index: string]: any} = client;
             const value = 100;
@@ -166,45 +154,41 @@ describe('EmberClient', () => {
             client.root = new TreeNode();
             client.root.addChild(new Parameter(number, ParameterType.integer, value));
             const param = new Parameter(number, ParameterType.integer, value + 1);
-            let event: EmberClientEvent;
-            let response: TreeNode;
-            mockedClient.emit = (e: EmberClientEvent, data: any) => {
-                event = e;
-                response = data as TreeNode;
-            };
+            const responsePromise = new Promise<[EmberClientEvent, TreeNode]>(resolve => {
+                mockedClient.emit = (e: EmberClientEvent, data: any) => resolve([e, data as TreeNode]);
+            });
             mockedClient.handleNode(client.root, param);
+            const [event, response] = await responsePromise;
             expect(response).toBeDefined();
             expect(event).toBe(EmberClientEvent.VALUE_CHANGE);
             expect((client.root.getElement(number) as Parameter).value).toBe(value + 1);
         });
-        it('should catch error when making request and emit them', () => {
+        it('should catch error when making request and emit them', async () => {
             const client = new EmberClient(options);
             const mockedClient: {[index: string]: any} = client;
-            let event: EmberClientEvent;
-            let error: Error;
             const internalError = new Error('internal error');
-            mockedClient.emit = (e: EmberClientEvent, data: any) => {
-                event = e;
-                error = data as Error;
-            };
+            const responsePromise = new Promise<[EmberClientEvent, Error]>(resolve => {
+                mockedClient.emit = (e: EmberClientEvent, data: any) => resolve([e, data as Error]);
+            });
             mockedClient.makeRequest = () => {throw internalError; };
             mockedClient.finishRequest();
+            const [event, error] = await responsePromise;
             expect(error).toBe(internalError);
             expect(event).toBe(EmberClientEvent.ERROR);
         });
-        it('should catch error when making request and pass them to callback if defined', () => {
+        it('should catch error when making request and pass them to callback if defined', async () => {
             const client = new EmberClient(options);
             const mockedClient: {[index: string]: any} = client;
-            let error: Error;
             const internalError = new Error('internal error');
             client.on(EmberClientEvent.ERROR, () => {});
-            mockedClient.makeRequest = () => {
-                mockedClient._callback = (e: Error) => {
-                    error = e;
+            const responsePromise = new Promise<Error>(resolve => {
+                mockedClient.makeRequest = () => {
+                    mockedClient._callback = (e: Error) => resolve(e);
+                    throw internalError;
                 };
-                throw internalError;
-            };
+            });
             mockedClient.finishRequest();
+            const error = await responsePromise;
             expect(error).toBe(internalError);
         });
     });
@@ -248,27 +232,31 @@ describe('EmberClient', () => {
         it('should auto subscribe with getDirectory and receive update', async () => {
             const client1 = new EmberClient(options);
             const client2 = new EmberClient(options);
-
+            const VALUE = 'new company';
             client1.on('error', () => {
                 // ignore
             });
             client2.on('error', () => {
                 // ignore
             });
-            let receivedUpdate: Parameter;
-            const updateCB = (node: TreeNode) => {
-                receivedUpdate = node as Parameter;
-            };
-            const VALUE = 'new company';
+
             await client1.connectAsync();
             await client2.connectAsync();
-            await client1.getElementByPathAsync('0.0.1', updateCB);
             const param: Parameter = await client2.getElementByPathAsync('0.0.1') as Parameter;
-            await client2.setValueAsync(param, VALUE);
+
+            const updatePromise = new Promise<Parameter>(async (resolve) => {
+                const updateCB = (node: TreeNode) => {
+                    resolve(node as Parameter);
+                };
+                await client1.getElementByPathAsync('0.0.1', updateCB);
+                await client2.setValueAsync(param, VALUE);
+            });
+
+            const receivedUpdate = await updatePromise;
+            expect(receivedUpdate).toBeDefined();
+            expect(receivedUpdate?.value).toBe(VALUE);
             await client1.disconnectAsync();
             await client2.disconnectAsync();
-            expect(receivedUpdate).toBeDefined();
-            expect(receivedUpdate.value).toBe(VALUE);
         });
     });
 });

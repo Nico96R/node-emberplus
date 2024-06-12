@@ -1,6 +1,6 @@
 'use strict';
 
-import { ParameterType, parameterTypeToString } from './parameter-type';
+import { ParameterType, ParameterTypeFromBERTAG, ParameterTypeToBERTAG, parameterTypeToString } from './parameter-type';
 import { ParameterAccess, parameterAccessToString } from './parameter-access';
 import { ExtendedReader as Reader, ExtendedWriter as Writer, CONTEXT, EMBER_SET, EMBER_STRING, EMBER_RELATIVE_OID } from '../ber';
 import { StringIntegerCollection } from './string-integer-collection';
@@ -54,8 +54,10 @@ export class ParameterContents {
         }
     }
 
-    static createParameterContent(value: number|string|boolean|Buffer): ParameterContents {
-        if (typeof value === 'string') {
+    static createParameterContent(value: number|string|boolean|Buffer, type?: ParameterType): ParameterContents {
+        if (type != null) {
+            return new ParameterContents(type, value);
+        } else if (typeof value === 'string') {
             return new ParameterContents(ParameterType.string, value);
         } else if (typeof value === 'boolean') {
             return new ParameterContents(ParameterType.boolean, value);
@@ -148,9 +150,9 @@ export class ParameterContents {
 
         ber.writeIfDefined(this.identifier, ber.writeString, 0, EMBER_STRING);
         ber.writeIfDefined(this.description, ber.writeString, 1, EMBER_STRING);
-        ber.writeIfDefined(this.value, ber.writeValue, 2);
-        ber.writeIfDefined(this.minimum, ber.writeValue, 3);
-        ber.writeIfDefined(this.maximum, ber.writeValue, 4);
+        ber.writeIfDefined(this.value, ber.writeValue, 2, ParameterTypeToBERTAG(this.type));
+        ber.writeIfDefined(this.minimum, ber.writeValue, 3, ParameterTypeToBERTAG(this.type));
+        ber.writeIfDefined(this.maximum, ber.writeValue, 4, ParameterTypeToBERTAG(this.type));
         ber.writeIfDefined(this.access, ber.writeInt, 5);
         ber.writeIfDefined(this.format, ber.writeString, 6, EMBER_STRING);
         ber.writeIfDefined(this.enumeration, ber.writeString, 7, EMBER_STRING);
@@ -158,7 +160,7 @@ export class ParameterContents {
         ber.writeIfDefined(this.isOnline, ber.writeBoolean, 9);
         ber.writeIfDefined(this.formula, ber.writeString, 10, EMBER_STRING);
         ber.writeIfDefined(this.step, ber.writeInt, 11);
-        ber.writeIfDefined(this.default, ber.writeValue, 12);
+        ber.writeIfDefined(this.default, ber.writeValue, 12, ParameterTypeToBERTAG(this.type));
         ber.writeIfDefined(this.type, ber.writeInt, 13);
 
         ber.writeIfDefined(this.streamIdentifier, ber.writeInt, 14);

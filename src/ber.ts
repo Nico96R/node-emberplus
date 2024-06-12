@@ -285,28 +285,16 @@ export class ExtendedWriter extends BER.Writer {
     }
 
     writeValue(value: any, tag?: number): void {
-         if (Number.isInteger(value)) {
-            if (tag === undefined) {
-                tag = EMBER_INTEGER;
-            }
-            this.writeInt(value, tag);
-        } else if (typeof value === 'boolean') {
-            if (tag === undefined) {
-                tag = EMBER_BOOLEAN;
-            }
-            this.writeBoolean(value, tag);
-        } else if (typeof value === 'number') {
-            if (tag === undefined) {
-                tag = EMBER_REAL;
-            }
-            this.writeReal(value, tag);
-        } else if (Buffer.isBuffer(value)) {
+         if (tag === EMBER_INTEGER || (tag == null && Number.isInteger(value))) {
+            this.writeInt(value, EMBER_INTEGER);
+        } else if (tag === EMBER_BOOLEAN || (tag == null && typeof value === 'boolean')) {
+            this.writeBoolean(value, EMBER_BOOLEAN);
+        } else if (tag === EMBER_REAL || (tag == null && typeof value === 'number')) {
+            this.writeReal(value, EMBER_REAL);
+        } else if (tag === EMBER_OCTETSTRING || (tag == null && Buffer.isBuffer(value))) {
             this.writeBuffer(value, tag);
         } else {
-            if (tag === undefined) {
-                tag = EMBER_STRING;
-            }
-            this.writeString(value.toString(), tag);
+            this.writeString(value.toString(), EMBER_STRING);
         }
     }
 }

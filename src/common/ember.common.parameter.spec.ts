@@ -23,7 +23,7 @@ describe('Parameter', () => {
             }, InvalidBERFormatError);
             testErrorReturned(
                 () => {
-                    ParameterTypeToBERTAG(99);
+                    ParameterTypeToBERTAG(99 as ParameterType);
             }, InvalidEmberNodeError);
         });
 
@@ -80,11 +80,11 @@ describe('Parameter', () => {
             const writer = new BER.ExtendedWriter();
             parameter.encode(writer);
             const newParameter = childDecode(new BER.ExtendedReader(writer.buffer)) as Parameter;
-            expect(newParameter.getChildren().length).toBe(1);
-            expect(newParameter.streamDescriptor.offset).toBe(OFFSET);
+            expect(newParameter.getChildren()).toHaveLength(1);
+            expect(newParameter.streamDescriptor?.offset).toBe(OFFSET);
             expect(newParameter.step).toBe(STEP);
             expect(newParameter.default).toBe(DEFAULT);
-            expect(newParameter.enumMap.get(KEY).value).toBe(KEY_VAL);
+            expect(newParameter.enumMap?.get(KEY).value).toBe(KEY_VAL);
             expect(newParameter.schemaIdentifiers).toBe(SCHEMA);
         });
 
@@ -97,9 +97,19 @@ describe('Parameter', () => {
             expect(newParameter.value).toBe(VALUE);
         });
 
+        it('should keep type real even if integer value', () => {
+            const VALUE = 1;
+            const parameter = new Parameter(0, parameterTypeFromString('real'), VALUE);
+            const writer = new BER.ExtendedWriter();
+            parameter.encode(writer);
+            const newParameter = Parameter.decode(new BER.ExtendedReader(writer.buffer));
+            expect(newParameter.value).toBe(VALUE);
+            expect(newParameter.type).toBe(ParameterType.real);
+        });
+
         it('should support type string', () => {
             const VALUE = 'string support';
-            const parameter = new Parameter(0, parameterTypeFromString('integer'), VALUE);
+            const parameter = new Parameter(0, parameterTypeFromString('string'), VALUE);
             const writer = new BER.ExtendedWriter();
             parameter.encode(writer);
             const newParameter = Parameter.decode(new BER.ExtendedReader(writer.buffer));
@@ -196,16 +206,13 @@ describe('Parameter', () => {
             expect((setVal.getElementByPath(PATH) as Parameter).contents.value).toBe(NEW_VALUE);
         });
 
-        it('should accept subscribers and have a function to update them', () => {
+        it('should accept subscribers and have a function to update them', async () => {
             const VALUE = 1;
             const qp = new QualifiedParameter(PATH, parameterTypeFromString('integer'), VALUE);
             qp.streamIdentifier = 12345;
-            let updatedValue = null;
-            const handleUpdate = (param: Parameter) => {
-                updatedValue = param.contents.value;
-            };
-            qp.subscribe(handleUpdate);
+            const updatePromise = new Promise(resolve => qp.subscribe((param) => resolve((param as Parameter).contents.value)));
             qp.updateSubscribers();
+            const updatedValue = await updatePromise;
             expect(updatedValue).toBe(VALUE);
         });
     });
@@ -230,6 +237,9 @@ describe('Parameter', () => {
             expect(paramContent.type).toBe(ParameterType.octets);
 
             paramContent = ParameterContents.createParameterContent(realValue);
+            expect(paramContent.type).toBe(ParameterType.real);
+
+            paramContent = ParameterContents.createParameterContent(integerValue, ParameterType.real);
             expect(paramContent.type).toBe(ParameterType.real);
         });
 
