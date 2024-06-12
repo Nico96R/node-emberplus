@@ -1,6 +1,6 @@
 {
     "name": "node-emberplus",
-    "version": "3.0.3",
+    "version": "3.0.5",
     "description": "Javascript implementation of the Ember+ automation protocol",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
@@ -16,6 +16,7 @@
         "jest-coverage-badges": "jest-coverage-badges"
     },
     "author": "Gilles Dufour (dufour.gilles@gmail.com)",
+    "files": ["lib"],
     "license": "MIT",
     "repository": {
         "type": "git",
