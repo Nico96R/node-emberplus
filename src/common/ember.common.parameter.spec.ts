@@ -251,6 +251,21 @@ describe('Parameter', () => {
             }, UnsupportedValueError);
         });
     });
+    describe('EnumParameter', () => {
+        const number = 10;
+        const path = '0.1.10';
+        const type = ParameterType.enum;
+        const value = 1;
+        const enumParam = new Parameter(number, type, value);
+        it('should encode value as integer', () => {
+            enumParam.enumeration = 'one\ntwo\nthree\nfour';
+            const writer = new BER.ExtendedWriter();
+            enumParam.encode(writer);
+            const newParameter = childDecode(new BER.ExtendedReader(writer.buffer)) as Parameter;
+            expect(newParameter.type).toBe(ParameterType.enum);
+            expect(newParameter.value).toBe(1);
+        });
+    });
     describe('ParameterContent properties directly accessible from Parameter', () => {
         const number = 10;
         const path = '0.1.10';

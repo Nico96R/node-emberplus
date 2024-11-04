@@ -11,7 +11,7 @@ export const ParameterTypeToBERTAG = (type: ParameterType): number => {
         case ParameterType.string: return EMBER_STRING;
         case ParameterType.boolean: return EMBER_BOOLEAN;
         case ParameterType.octets: return EMBER_OCTETSTRING;
-        case ParameterType.enum: return EMBER_ENUMERATED;
+        case ParameterType.enum: return EMBER_INTEGER;
         default:
             throw new InvalidEmberNodeError('', `Unhandled ParameterType ${type}`);
     }

@@ -1,6 +1,6 @@
 'use strict';
 
-import { ParameterType, ParameterTypeFromBERTAG, ParameterTypeToBERTAG, parameterTypeToString } from './parameter-type';
+import { ParameterType, ParameterTypeToBERTAG, parameterTypeToString } from './parameter-type';
 import { ParameterAccess, parameterAccessToString } from './parameter-access';
 import { ExtendedReader as Reader, ExtendedWriter as Writer, CONTEXT, EMBER_SET, EMBER_STRING, EMBER_RELATIVE_OID } from '../ber';
 import { StringIntegerCollection } from './string-integer-collection';
