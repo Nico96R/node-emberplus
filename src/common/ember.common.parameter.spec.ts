@@ -265,6 +265,14 @@ describe('Parameter', () => {
             expect(newParameter.type).toBe(ParameterType.enum);
             expect(newParameter.value).toBe(1);
         });
+        it('should throw an error if value not number', () => {
+            expect(() => new Parameter(number, type, 'text')).toThrow();
+            expect(() => new Parameter(number, type, true)).toThrow();
+            expect(() => new Parameter(number, type, Buffer.from('text'))).toThrow();
+            expect(() => enumParam.value = 'text').toThrow();
+            expect(() => enumParam.value = true).toThrow();
+            expect(() => enumParam.value = Buffer.from('text')).toThrow();
+        });
     });
     describe('ParameterContent properties directly accessible from Parameter', () => {
         const number = 10;

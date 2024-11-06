@@ -48,10 +48,24 @@ export class ParameterContents {
     public schemaIdentifiers?: string;
     public templateReference?: string;
 
-    constructor(public type?: ParameterType, public value?: string | number | boolean | Buffer) {
+    private _value?: string | number | boolean | Buffer;
+
+    constructor(public type?: ParameterType, value?: string | number | boolean | Buffer) {
         if (type != null && isNaN(Number(type))) {
             throw new InvalidEmberNodeError(`Invalid parameter type ${type}`);
         }
+        this.value = value;
+    }
+
+    get value(): string | number | boolean | Buffer {
+        return this._value;
+    }
+    set value(v: string | number | boolean | Buffer) {
+        const valueType = typeof(v);
+        if (v != null && (this.type === ParameterType.enum || this.type === ParameterType.integer) && valueType !== 'number') {
+            throw new Error(`Invalid value type ${valueType}. Expected number.`);
+        }
+        this._value = v;
     }
 
     static createParameterContent(value: number|string|boolean|Buffer, type?: ParameterType): ParameterContents {
